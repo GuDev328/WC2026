@@ -41,14 +41,15 @@ export function TeamDetail({ team, standings, recentMatches, onClose }: TeamDeta
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4" onClick={onClose}>
       <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
       <div
-        className="relative bg-[#18181b] border border-[#27272a] rounded-2xl p-6 max-w-sm w-full shadow-2xl animate-fade-up"
+        className="relative bg-[#18181b] border border-[#27272a] rounded-2xl p-4 sm:p-6 max-w-sm w-full max-h-[90vh] overflow-y-auto shadow-2xl animate-fade-up"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Close */}
         <button
           type="button"
           onClick={onClose}
-          className="absolute top-3 right-3 text-[#3f3f46] hover:text-white transition-colors text-lg leading-none "
+          className="absolute top-2 right-2 sm:top-3 sm:right-3 text-[#3f3f46] hover:text-white transition-colors text-lg leading-none min-h-[44px] min-w-[44px] flex items-center justify-center rounded-lg hover:bg-white/5"
+          aria-label="Đóng"
         >
           ✕
         </button>
@@ -63,14 +64,14 @@ export function TeamDetail({ team, standings, recentMatches, onClose }: TeamDeta
         </div>
 
         {/* Key stats */}
-        <div className="grid grid-cols-4 gap-2 mb-5">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-5">
           {[
             ['ST', standings.played],
             ['T', standings.won, '#10b981'],
             ['H', standings.drawn, '#f59e0b'],
             ['B', standings.lost, '#f43f5e'],
           ].map(([label, val, color]) => (
-            <div key={label as string} className="bg-[#09090b] rounded-xl p-2 text-center border border-[#27272a]">
+            <div key={label as string} className="bg-[#09090b] rounded-xl p-2 text-center border border-[#27272a] flex flex-col justify-center min-h-[48px]">
               <div className="text-[9px] text-[#3f3f46] mb-0.5">{label}</div>
               <div className="text-sm font-bold tabular-nums" style={{ color: color as string || '#e4e4e7' }}>{val as number}</div>
             </div>
@@ -78,7 +79,7 @@ export function TeamDetail({ team, standings, recentMatches, onClose }: TeamDeta
         </div>
 
         {/* Goal stats */}
-        <div className="flex items-center gap-4 text-[11px] mb-5 bg-[#09090b] rounded-xl p-3 border border-[#27272a]">
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-[11px] mb-5 bg-[#09090b] rounded-xl p-3 border border-[#27272a]">
           <div className="flex-1 text-center">
             <div className="text-[#3f3f46] text-[9px] mb-0.5">Bàn thắng</div>
             <div className="text-[#10b981] font-bold tabular-nums">{standings.goalsFor}</div>

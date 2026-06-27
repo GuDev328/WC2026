@@ -147,8 +147,8 @@ export default function App() {
 
       {/* Stats bar + countdown */}
       <div className="relative z-10 max-w-[1600px] mx-auto w-full px-6">
-        <div className="flex items-center justify-between py-2 gap-4">
-          <div className="flex items-center gap-4 text-[10px]">
+        <div className="flex flex-wrap items-center justify-between py-2 gap-x-4 gap-y-1">
+          <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5 text-[10px]">
             <span className="text-[#3f3f46]">
               <span className="text-white font-semibold tabular-nums">{totalMatches}</span> trận
             </span>
@@ -187,7 +187,7 @@ export default function App() {
                 {countdown.timeLeft}
               </span>
               <span className="text-[#27272a]">·</span>
-              <span className="text-[#3f3f46] max-w-[120px] truncate">
+              <span className="text-[#3f3f46] max-w-[60px] sm:max-w-[120px] truncate">
                 {TEAMS[countdown.match.homeTeamId]?.nameVi || countdown.match.homeTeamId}
                 {' vs '}
                 {TEAMS[countdown.match.awayTeamId]?.nameVi || countdown.match.awayTeamId}
@@ -216,7 +216,7 @@ export default function App() {
                     {i + 1}
                   </span>
                   <img src={flagUrl(team.iso2)} alt="" className="w-3.5 h-2.5 object-cover rounded-sm" />
-                  <span className="text-[10px] text-[#a1a1aa] truncate max-w-[80px]">
+                  <span className="text-[10px] text-[#a1a1aa] truncate max-w-[60px] sm:max-w-[80px]">
                     {team.nameVi}
                   </span>
                   <span className="text-[10px] text-white font-bold tabular-nums ml-0.5">

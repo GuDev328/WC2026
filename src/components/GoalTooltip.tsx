@@ -1,4 +1,4 @@
-import { memo, useState, useRef, useCallback } from 'react'
+import { memo, useState, useRef, useCallback, useEffect } from 'react'
 import { createPortal } from 'react-dom'
 import type { GoalEvent } from '../types'
 import TEAMS from '../data/teams'
@@ -41,7 +41,12 @@ export default memo(function GoalTooltip({ matchId, children }: GoalTooltipProps
     const el = triggerRef.current
     if (el) {
       const r = el.getBoundingClientRect()
-      setPos({ x: r.left + r.width / 2, y: r.bottom + 6 })
+      const halfWidth = 140 // max-w-[280px] / 2
+      let left = r.left + r.width / 2
+      const margin = 8
+      if (left - halfWidth < margin) left = halfWidth + margin
+      if (left + halfWidth > window.innerWidth - margin) left = window.innerWidth - halfWidth - margin
+      setPos({ x: left, y: r.bottom + 6 })
     }
     setOpen(true)
   }, [load])
@@ -61,11 +66,25 @@ export default memo(function GoalTooltip({ matchId, children }: GoalTooltipProps
     clearTimeout(timerRef.current)
   }, [])
 
+  // Click-outside dismiss (for touch devices)
+  useEffect(() => {
+    if (!open) return
+    const handleClick = (e: MouseEvent) => {
+      const target = e.target as Node
+      if (triggerRef.current && triggerRef.current.contains(target)) return
+      const tooltipEl = document.querySelector('[data-goal-tooltip]')
+      if (tooltipEl && tooltipEl.contains(target)) return
+      setOpen(false)
+    }
+    document.addEventListener('click', handleClick)
+    return () => document.removeEventListener('click', handleClick)
+  }, [open])
+
   const loaded = goals !== null
   const hasGoals = loaded && goals.length > 0
 
   return (
-    <div ref={triggerRef} className="inline-flex items-center group/tip" onMouseEnter={show} onMouseLeave={() => tryHide('trigger')}>
+    <div ref={triggerRef} className="inline-flex items-center cursor-pointer py-1 px-0.5 -my-1 -mx-0.5" onMouseEnter={show} onMouseLeave={() => tryHide('trigger')} onTouchStart={(e) => { e.stopPropagation(); open ? setOpen(false) : show() }}>
       <div className={`absolute -inset-1 rounded-md transition-opacity bg-white/[0.03] ring-1 ring-white/5 ${open ? 'opacity-100' : 'opacity-0'}`} />
       <span className="relative z-10 ">{children}</span>
       <span className={`relative z-10 w-2.5 h-2.5 flex items-center justify-center ml-0.5 transition-opacity flex-shrink-0 ${open ? 'opacity-100' : 'opacity-0'}`}>
@@ -74,6 +93,7 @@ export default memo(function GoalTooltip({ matchId, children }: GoalTooltipProps
 
       {open && createPortal(
         <div
+          data-goal-tooltip
           className="fixed z-[9999] animate-fade-up"
           style={{ top: pos.y, left: pos.x, transform: 'translate(-50%, 0)' }}
           onMouseEnter={enterTooltip}

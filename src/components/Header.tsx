@@ -26,8 +26,8 @@ export default function Header({ lastUpdated, error, onRefresh, liveCount }: Hea
   }, [lastUpdated])
 
   return (
-    <header className="sticky top-0 z-50 glass border-b border-[#27272a]/40">
-      <div className="max-w-[1600px] mx-auto flex items-center justify-between px-6 py-3">
+    <header className="sticky top-0 z-50 glass border-b border-[#27272a]/40 safe-top">
+      <div className="max-w-[1600px] mx-auto flex flex-wrap items-center justify-between px-3 sm:px-6 py-2 sm:py-3 gap-y-2">
         <div className="flex items-center gap-3">
           {/* Animated WC Trophy Logo */}
           <div className="relative flex-shrink-0">
@@ -59,7 +59,7 @@ export default function Header({ lastUpdated, error, onRefresh, liveCount }: Hea
                     <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#f43f5e] opacity-75" />
                     <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-[#f43f5e]" />
                   </span>
-                  {liveCount} LIVE
+                  {liveCount} <span className="hidden sm:inline">LIVE</span>
                 </span>
               )}
             </h1>
@@ -69,7 +69,7 @@ export default function Header({ lastUpdated, error, onRefresh, liveCount }: Hea
           </div>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
           {error && (
             <span className="text-[10px] bg-[#f43f5e]/10 text-[#f43f5e] border border-[#f43f5e]/20 px-2 py-1 rounded-md animate-fade-in">
               ⚠ {error}
@@ -91,7 +91,7 @@ export default function Header({ lastUpdated, error, onRefresh, liveCount }: Hea
           <button
             type="button"
             onClick={onRefresh}
-            className="text-[11px] font-medium bg-white/5 hover:bg-white/10 text-[#a1a1aa] border border-[#27272a] hover:border-[#3f3f46] px-3 py-1.5 rounded-lg transition-all  active:scale-95 ripple"
+            className="text-[11px] font-medium bg-white/5 hover:bg-white/10 text-[#a1a1aa] border border-[#27272a] hover:border-[#3f3f46] px-3 py-2.5 sm:py-1.5 rounded-lg transition-all active:scale-95 ripple touch-target flex items-center justify-center"
           >
             ↻ Làm mới
           </button>

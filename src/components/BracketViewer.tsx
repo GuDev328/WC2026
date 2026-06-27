@@ -6,7 +6,7 @@ import { flagUrl } from '../utils/flag'
 
 interface BracketViewerProps { matches: Match[] }
 
-const MW = 128; const MH = 42; const GX = 26; const Y0 = 38
+const MW = 100; const MH = 42; const GX = 26; const Y0 = 38
 const LABEL: Record<string, string> = {
   R32: 'Vòng 32', R16: 'Vòng 16', QUARTER: 'Tứ Kết',
   SEMI: 'Bán Kết', THIRD_PLACE: 'Hạng Ba', FINAL: 'Chung Kết',
@@ -49,6 +49,7 @@ function buildBracket(ko: Record<string, Match[]>) {
   const tp = ko.THIRD_PLACE?.[0] || null
 
   const cx = 20 + 4 * COL_W
+  const rCol0 = cx + COL_W
   const botY = 7
 
   const add = (id: string, x: number, yy: number, stage: string, m: Match | null) => {
@@ -84,7 +85,6 @@ function buildBracket(ko: Record<string, Match[]>) {
   conns.push(['L-QF-1', 'L-SF', false], ['L-QF-2', 'L-SF', false])
 
   // RIGHT
-  const rCol0 = cx + COL_W + 20
   add('R-R32-4', rCol0 + 3 * COL_W, ry(0, 2), 'R32', r(4))
   add('R-R32-6', rCol0 + 3 * COL_W, ry(1, 2), 'R32', r(6))
   add('R-R32-7', rCol0 + 3 * COL_W, ry(3, 2), 'R32', r(7))
@@ -114,7 +114,7 @@ function buildBracket(ko: Record<string, Match[]>) {
   conns.push(['L-SF', 'C-FINAL', false], ['R-SF', 'C-FINAL', false])
   conns.push(['L-SF', 'C-THIRD', true], ['R-SF', 'C-THIRD', true])
 
-  const w = rCol0 + 4 * COL_W + MW + 20
+  const w = rCol0 + 3 * COL_W + MW + 20
   const h = ry(botY + 4, 2) + MH + 60
   return { slots, conns, w, h, cx, sfYmid }
 }
@@ -133,8 +133,8 @@ export default function BracketViewer({ matches }: BracketViewerProps) {
         <span className="text-[10px] text-[#3f3f46] ml-2">32 đội · Knockout</span>
       </div>
 
-      <div className="overflow-auto rounded-xl border border-[#27272a]" style={{ maxHeight: '82vh', background: '#09090b' }}>
-        <svg width={w} height={h} viewBox={`0 0 ${w} ${h}`} className="min-w-full">
+      <div className="overflow-auto rounded-xl border border-[#27272a] momentum-scroll" style={{ maxHeight: '82vh', background: '#09090b' }}>
+          <svg viewBox={`0 0 ${w} ${h}`} className="block mx-auto" style={{ minWidth: `${w}px`, height: `${h}px` }}>
           <defs>
             <radialGradient id="bgGlow" cx="50%" cy="45%">
               <stop offset="0%" stopColor="#22d3ee" stopOpacity="0.04" />
@@ -167,7 +167,7 @@ export default function BracketViewer({ matches }: BracketViewerProps) {
             fill="none" stroke="#27272a" strokeWidth="1" opacity="0.3"
           />
 
-          
+
 
           {/* Round labels */}
           {(['R32', 'R16', 'QUARTER', 'SEMI'] as const).map((s, i) => {
@@ -216,7 +216,6 @@ export default function BracketViewer({ matches }: BracketViewerProps) {
             const x0 = f.x + MW, fmy = f.y + MH / 2, x3 = t.x, tmy = t.y + MH / 2, mx = (x0 + x3) / 2
             return (
               <g key={`c${i}`}>
-                {/* Glow shadow for winning path */}
                 {f.won && !dash && (
                   <path
                     d={`M${x0} ${fmy} L${mx} ${fmy} L${mx} ${tmy} L${x3} ${tmy}`}
@@ -232,7 +231,6 @@ export default function BracketViewer({ matches }: BracketViewerProps) {
                   opacity={dash ? 0.35 : f.won ? 0.8 : 0.5}
                   strokeLinecap="round"
                 />
-                {/* Arrow at end */}
                 {!dash && (
                   <circle cx={x3} cy={tmy} r="2.5" fill={f.won ? '#22d3ee' : '#27272a'} opacity={f.won ? 0.6 : 0.3} />
                 )}
@@ -250,13 +248,11 @@ export default function BracketViewer({ matches }: BracketViewerProps) {
 
             return (
               <g key={s.id} className="animate-fade-up">
-                {/* Glow behind final */}
                 {isFinal && (
                   <rect x={s.x - 4} y={s.y - 4} width={MW + 8} height={MH + 8} rx={8}
                     fill="none" stroke="#f59e0b" strokeWidth="1" opacity="0.2" filter="url(#glow)" />
                 )}
 
-                {/* Card */}
                 <rect x={s.x} y={s.y} width={MW} height={MH} rx={6}
                   fill={isFinal ? '#1a1408' : isThird ? '#181425' : '#18181b'}
                   stroke={isFinal ? 'url(#finalBdr)' : isThird ? 'url(#thirdBdr)' : '#27272a'}
@@ -264,20 +260,16 @@ export default function BracketViewer({ matches }: BracketViewerProps) {
                   opacity={isFinal || isThird ? 1 : 0.9}
                 />
 
-                {/* Home flag */}
                 {hd.iso && <image xlinkHref={flagUrl(hd.iso)} x={s.x + 7} y={s.y + 6} width="14" height="10"
                   opacity={hd.n === '...' ? 0.2 : 1} />}
-                {/* Home name */}
                 <text x={s.x + (hd.iso ? 26 : 7)} y={s.y + 17}
                   fill={s.won === s.home ? '#10b981' : hd.n === '...' ? '#27272a' : '#e4e4e7'}
                   fontSize="10" fontWeight={s.won === s.home ? '700' : '400'}>
                   {hd.n}
                 </text>
-                {/* Winner star */}
                 {s.won === s.home && (
                   <text x={s.x + MW - 28} y={s.y + 13} fill="#f59e0b" fontSize="8" filter="url(#glow)">★</text>
                 )}
-                {/* Home score */}
                 {sc && (
                   <text x={s.x + MW - 10} y={s.y + 17} textAnchor="end"
                     fill={s.won === s.home ? '#10b981' : '#3f3f46'} fontSize="11" fontWeight="800">
@@ -285,20 +277,16 @@ export default function BracketViewer({ matches }: BracketViewerProps) {
                   </text>
                 )}
 
-                {/* Away flag */}
                 {ad.iso && <image xlinkHref={flagUrl(ad.iso)} x={s.x + 7} y={s.y + 25} width="14" height="10"
                   opacity={ad.n === '...' ? 0.2 : 1} />}
-                {/* Away name */}
                 <text x={s.x + (ad.iso ? 26 : 7)} y={s.y + 35}
                   fill={s.won === s.away ? '#10b981' : ad.n === '...' ? '#27272a' : '#e4e4e7'}
                   fontSize="10" fontWeight={s.won === s.away ? '700' : '400'}>
                   {ad.n}
                 </text>
-                {/* Winner star */}
                 {s.won === s.away && (
                   <text x={s.x + MW - 28} y={s.y + 31} fill="#f59e0b" fontSize="8" filter="url(#glow)">★</text>
                 )}
-                {/* Away score */}
                 {sc && (
                   <text x={s.x + MW - 10} y={s.y + 35} textAnchor="end"
                     fill={s.won === s.away ? '#10b981' : '#3f3f46'} fontSize="11" fontWeight="800">
@@ -306,13 +294,11 @@ export default function BracketViewer({ matches }: BracketViewerProps) {
                   </text>
                 )}
 
-                {/* Semi/Final decoration */}
                 {(isFinal || isSemi) && (
                   <text x={s.x + 6} y={s.y + 38} fontSize="10" opacity="0.1">
                     {isFinal ? '🏆' : '⚡'}
                   </text>
                 )}
-                {/* Penalty indicator */}
                 {sc && s.hs !== null && s.as !== null && Math.abs(s.hs - s.as) <= 1 && isFinal && (
                   <text x={s.x + MW - 20} y={s.y + 38} fontSize="7" fill="#f59e0b" opacity="0.5">pens?</text>
                 )}
@@ -320,12 +306,10 @@ export default function BracketViewer({ matches }: BracketViewerProps) {
             )
           })}
 
-          {/* Bottom text */}
           <text x={cx + MW / 2} y={h - 8} textAnchor="middle" fill="#1f1f23" fontSize="8" fontWeight="700" letterSpacing="0.15em">
             FIFA WORLD CUP 2026™ · KNOCKOUT STAGE
           </text>
 
-          {/* Decorative dots at bottom */}
           {Array.from({ length: 20 }).map((_, i) => (
             <circle key={`dot-${i}`}
               cx={w * 0.1 + (w * 0.8 * i) / 20} cy={h - 22} r="1"

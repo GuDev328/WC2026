@@ -88,7 +88,7 @@ export default function MatchesList({ matches }: MatchesListProps) {
         </div>
 
         {/* Filter pills */}
-        <div className="flex bg-[#18181b] rounded-xl p-1 border border-[#27272a] shadow-lg shadow-black/20">
+        <div className="flex flex-wrap justify-center bg-[#18181b] rounded-xl p-1 border border-[#27272a] shadow-lg shadow-black/20">
           {tabs.map(({ key, label, icon, color }) => {
             const active = filter === key
             return (
@@ -96,7 +96,7 @@ export default function MatchesList({ matches }: MatchesListProps) {
                 key={key}
                 type="button"
                 onClick={() => { setFilter(key); setSelectedDay(null) }}
-                className={`relative px-4 py-2 text-xs font-medium rounded-lg transition-all  flex items-center gap-1.5 ${
+                className={`relative px-3 sm:px-4 py-2.5 sm:py-2 text-xs font-medium rounded-lg transition-all flex items-center gap-1.5 touch-target ${
                   active
                     ? 'text-white bg-white/10 shadow-sm'
                     : 'text-[#71717a] hover:text-[#a1a1aa]'
@@ -124,7 +124,7 @@ export default function MatchesList({ matches }: MatchesListProps) {
       </div>
 
       {/* Date carousel */}
-      <div className="flex items-center gap-2 mb-4 overflow-x-auto pb-1 scrollbar-none max-w-full">
+      <div className="flex items-center gap-2 mb-4 overflow-x-auto pb-1 scrollbar-none momentum-scroll max-w-full">
         <button
           type="button"
           onClick={() => setSelectedDay(null)}
@@ -162,7 +162,7 @@ export default function MatchesList({ matches }: MatchesListProps) {
           </p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-2 sm:gap-3">
           {displayMatches.map((match, i) => (
             <div key={match.id} style={{ animationDelay: `${i * 0.03}s` }} className="animate-fade-up">
               <MatchCard match={match} />

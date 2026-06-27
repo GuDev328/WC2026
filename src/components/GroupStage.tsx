@@ -75,7 +75,7 @@ export default memo(function GroupStage({ groups, standings, groupMatches, teamF
         })}
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4">
         {groups.map((group, gi) => {
           const gs = standings[group.id] || defaultStandings(group)
           const gm = groupMatches[group.id] || []
@@ -96,20 +96,21 @@ export default memo(function GroupStage({ groups, standings, groupMatches, teamF
               </div>
 
               {/* Standings */}
-              <table className="w-full text-[11px]">
+              <div className="overflow-x-auto -mx-4 sm:mx-0 px-4 sm:px-0">
+              <table className="w-full text-[11px] min-w-[360px]">
                 <thead>
                   <tr className="text-[#3f3f46] border-b border-[#27272a]/50">
                     <th className="text-left pl-3 pr-1 py-2 font-medium">#</th>
                     <th className="text-left px-0 py-2 font-medium">Đội</th>
-                    <th className="text-center px-1 py-2 font-medium w-6">ST</th>
-                    <th className="text-center px-1 py-2 font-medium w-6">T</th>
-                    <th className="text-center px-1 py-2 font-medium w-6">H</th>
-                    <th className="text-center px-1 py-2 font-medium w-6">B</th>
-                    <th className="text-center px-1 py-2 font-medium w-5">BT</th>
-                    <th className="text-center px-1 py-2 font-medium w-5">BB</th>
-                    <th className="text-center px-0 py-2 font-medium w-3">HS</th>
-                    <th className="text-center pr-1 py-2 font-medium w-6">Đ</th>
-                    <th className="text-center pr-3 py-2 font-medium w-14">PT</th>
+                    <th className="text-center px-1 py-2 font-medium w-6"><span className="hidden sm:inline">ST</span><span className="sm:hidden">Tr</span></th>
+                    <th className="text-center px-1 py-2 font-medium w-6"><span className="hidden sm:inline">T</span><span className="sm:hidden">Th</span></th>
+                    <th className="text-center px-1 py-2 font-medium w-6"><span className="hidden sm:inline">H</span><span className="sm:hidden">Hò</span></th>
+                    <th className="text-center px-1 py-2 font-medium w-6"><span className="hidden sm:inline">B</span><span className="sm:hidden">Ba</span></th>
+                    <th className="text-center px-1 py-2 font-medium w-5"><span className="hidden sm:inline">BT</span><span className="sm:hidden">Ghi</span></th>
+                    <th className="text-center px-1 py-2 font-medium w-5"><span className="hidden sm:inline">BB</span><span className="sm:hidden">Lọt</span></th>
+                    <th className="text-center px-0 py-2 font-medium w-3"><span className="hidden sm:inline">HS</span><span className="sm:hidden">+/-</span></th>
+                    <th className="text-center pr-1 py-2 font-medium w-6"><span className="hidden sm:inline">Đ</span><span className="sm:hidden">Điểm</span></th>
+                    <th className="text-center pr-3 py-2 font-medium w-14"><span className="hidden sm:inline">PT</span><span className="sm:hidden">P.độ</span></th>
                   </tr>
                 </thead>
                 <tbody>
@@ -135,7 +136,7 @@ export default memo(function GroupStage({ groups, standings, groupMatches, teamF
                           }
                         }}
                       >
-                        <td className="pl-3 pr-1 py-2.5">
+                        <td className="pl-3 pr-1 py-3 sm:py-2.5">
                           <span className="text-[10px]">
                             {qStatus === 'Q' && idx === 0 ? '🏆' :
                              qStatus === 'Q' && idx === 1 ? '🥈' :
@@ -145,7 +146,7 @@ export default memo(function GroupStage({ groups, standings, groupMatches, teamF
                             )}
                           </span>
                         </td>
-                        <td className="px-0 py-2.5">
+                        <td className="px-0 py-3 sm:py-2.5">
                           <div className="flex items-center gap-1.5">
                             <img
                               src={team?.iso2 ? flagUrl(team.iso2) : ''}
@@ -154,7 +155,7 @@ export default memo(function GroupStage({ groups, standings, groupMatches, teamF
                               loading="lazy"
                             />
                             <div className="flex flex-col min-w-0">
-                              <span className={`font-medium truncate max-w-[70px] ${
+                              <span className={`font-medium truncate max-w-[50px] sm:max-w-[70px] ${
                                 qualified ? 'text-white' : 'text-[#a1a1aa]'
                               }`}>
                                 {team?.nameVi || team?.name || s.teamId}
@@ -169,23 +170,23 @@ export default memo(function GroupStage({ groups, standings, groupMatches, teamF
                             </div>
                           </div>
                         </td>
-                        <td className="text-center text-[#a1a1aa] px-1 py-2.5">{s.played}</td>
-                        <td className="text-center text-[#10b981] px-1 py-2.5 tabular-nums">{s.won}</td>
-                        <td className="text-center text-[#f59e0b] px-1 py-2.5 tabular-nums">{s.drawn}</td>
-                        <td className="text-center text-[#f43f5e] px-1 py-2.5 tabular-nums">{s.lost}</td>
-                        <td className="text-center text-[#a1a1aa] px-1 py-2.5 tabular-nums text-[10px]">{s.goalsFor}</td>
-                        <td className="text-center text-[#a1a1aa] px-1 py-2.5 tabular-nums text-[10px]">{s.goalsAgainst}</td>
-                        <td className="text-center px-0 py-2.5">
+                        <td className="text-center text-[#a1a1aa] px-1 py-3 sm:py-2.5">{s.played}</td>
+                        <td className="text-center text-[#10b981] px-1 py-3 sm:py-2.5 tabular-nums">{s.won}</td>
+                        <td className="text-center text-[#f59e0b] px-1 py-3 sm:py-2.5 tabular-nums">{s.drawn}</td>
+                        <td className="text-center text-[#f43f5e] px-1 py-3 sm:py-2.5 tabular-nums">{s.lost}</td>
+                        <td className="text-center text-[#a1a1aa] px-1 py-3 sm:py-2.5 tabular-nums text-[10px]">{s.goalsFor}</td>
+                        <td className="text-center text-[#a1a1aa] px-1 py-3 sm:py-2.5 tabular-nums text-[10px]">{s.goalsAgainst}</td>
+                        <td className="text-center px-0 py-3 sm:py-2.5">
                           <span className={`text-[10px] tabular-nums font-medium ${
                             gd > 0 ? 'text-[#10b981]' : gd < 0 ? 'text-[#f43f5e]' : 'text-[#3f3f46]'
                           }`}>
                             {gd > 0 ? `+${gd}` : gd}
                           </span>
                         </td>
-                        <td className="text-center pr-1 py-2.5">
+                        <td className="text-center pr-1 py-3 sm:py-2.5">
                           <span className="font-bold text-white tabular-nums">{s.points}</span>
                         </td>
-                        <td className="text-center pr-3 py-2.5">
+                        <td className="text-center pr-3 py-3 sm:py-2.5">
                           <div className="flex items-center justify-center gap-0.5">
                             {form.length === 0 ? (
                               <span className="text-[9px] text-[#27272a]">—</span>
@@ -207,6 +208,7 @@ export default memo(function GroupStage({ groups, standings, groupMatches, teamF
                   })}
                 </tbody>
               </table>
+              </div>
 
               {/* Matches */}
               <div className="px-4 pb-3 pt-1">

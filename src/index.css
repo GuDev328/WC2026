@@ -28,6 +28,8 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   overflow-x: hidden;
+  touch-action: manipulation;
+  overscroll-behavior-y: contain;
 }
 
 #root { min-height: 100vh; position: relative; }
@@ -76,10 +78,6 @@ body {
 @keyframes ripple {
   0% { transform: scale(0.8); opacity: 1; }
   100% { transform: scale(2.5); opacity: 0; }
-}
-@keyframes ticker {
-  0% { transform: translateX(100%); }
-  100% { transform: translateX(-100%); }
 }
 @keyframes ticker {
   0% { transform: translateX(100%); }
@@ -152,10 +150,18 @@ body {
 @media (prefers-reduced-motion: reduce) {
   .bg-orb, .bg-particles { display: none; }
   .animate-float, .animate-float-slow, .animate-breathe, .animate-pulse, .animate-ping, .animate-spin,
-  .animate-fade-up, .animate-score-pop, .animate-trophy, .animate-border-glow, .animate-spin-slow {
+  .animate-fade-up, .animate-score-pop, .animate-trophy, .animate-border-glow, .animate-spin-slow, .live-ring {
     animation: none !important;
   }
   .glass { backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); }
+  /* Stop ticker animation */
+  [class*="flex gap-8 text-"] { animation: none !important; }
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }
 .bg-orb-1 {
   width: 700px; height: 700px;
@@ -219,6 +225,29 @@ body {
     radial-gradient(1px 1px at 80% 5%, rgba(255,255,255,0.08), transparent);
   background-size: 200px 200px;
 }
+
+/* ==============================================
+   MOBILE UTILITIES
+   ============================================== */
+.scrollbar-none {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.scrollbar-none::-webkit-scrollbar { display: none; }
+
+.safe-top { padding-top: env(safe-area-inset-top, 0px); }
+.safe-bottom { padding-bottom: env(safe-area-inset-bottom, 0px); }
+.safe-left { padding-left: env(safe-area-inset-left, 0px); }
+.safe-right { padding-right: env(safe-area-inset-right, 0px); }
+.safe-pt { padding-top: env(safe-area-inset-top, 0px); }
+.safe-pb { padding-bottom: env(safe-area-inset-bottom, 0px); }
+
+.momentum-scroll {
+  -webkit-overflow-scrolling: touch;
+  scroll-behavior: smooth;
+}
+
+.touch-target { min-height: 44px; min-width: 44px; }
 
 /* ==============================================
    GRADIENT TEXT
