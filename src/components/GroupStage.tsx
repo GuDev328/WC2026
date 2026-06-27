@@ -17,11 +17,9 @@ function getQualStatus(
   s: GroupStanding,
   belowIdx: number | null,
   belowStanding: GroupStanding | null,
-  totalMatches: number,
+  _totalMatches: number,
 ): QualStatus {
   // If all 6 matches done, top 2 qualified
-  const remaining = 3 - s.played // max 3 matches per team in 4-team group
-  const maxPts = s.points + remaining * 3
   if (idx < 2) {
     // Check if position is mathematically secure
     if (belowIdx !== null && belowStanding) {
@@ -33,7 +31,6 @@ function getQualStatus(
   // Check if eliminated
   if (idx >= 2) {
     if (belowIdx === null && s.played === 3) return 'E'
-    const secondPlace = belowIdx !== null && belowStanding ? belowStanding : null
     // Not in a 4-team group context; simplified
     if (s.played === 3 && idx === 3) return 'E'
   }

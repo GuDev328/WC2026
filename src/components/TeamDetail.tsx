@@ -1,4 +1,4 @@
-import { useMemo, useState, useCallback } from 'react'
+import { useMemo } from 'react'
 import type { Match, Team } from '../types'
 import { flagUrl } from '../utils/flag'
 

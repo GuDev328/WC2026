@@ -1,4 +1,4 @@
-import { memo, useState, useRef, useCallback, useEffect } from 'react'
+import { memo, useState, useRef, useCallback } from 'react'
 import { createPortal } from 'react-dom'
 import type { GoalEvent } from '../types'
 import TEAMS from '../data/teams'
@@ -25,7 +25,7 @@ export default memo(function GoalTooltip({ matchId, children }: GoalTooltipProps
   const [pos, setPos] = useState({ x: 0, y: 0 })
   const triggerRef = useRef<HTMLDivElement>(null)
   const loadRef = useRef(false)
-  const timerRef = useRef<ReturnType<typeof setTimeout>>()
+  const timerRef = useRef<ReturnType<typeof setTimeout>>(undefined)
   const hoverRef = useRef({ inTrigger: false, inTooltip: false })
 
   const load = useCallback(() => {
