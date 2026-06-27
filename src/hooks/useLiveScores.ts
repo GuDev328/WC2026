@@ -24,6 +24,8 @@ export function useLiveScores(): UseLiveScoresReturn {
   const [lastUpdated, setLastUpdated] = useState<number | null>(null)
   const fetchingRef = useRef(false)
   const mountedRef = useRef(true)
+  const liveIdRef = useRef<ReturnType<typeof setInterval> | null>(null)
+  const fullIdRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
   function updateFromMatches(allMatches: Match[]) {
     const g = buildGroups(allMatches)
@@ -37,6 +39,16 @@ export function useLiveScores(): UseLiveScoresReturn {
       merged.set(m.id, m)
     }
     return Array.from(merged.values())
+  }
+
+  function hasMatchChanged(old: Match | undefined, next: Match): boolean {
+    if (!old) return true
+    return (
+      old.homeScore !== next.homeScore ||
+      old.awayScore !== next.awayScore ||
+      old.status !== next.status ||
+      old.minute !== next.minute
+    )
   }
 
   const fullFetch = useCallback(async (force = false) => {
@@ -66,26 +78,58 @@ export function useLiveScores(): UseLiveScoresReturn {
     if (!mountedRef.current || todayMatches.length === 0) return
 
     setMatches((prev) => {
+      // Only recompute groups/standings if live data actually changed
+      let changed = false
+      for (const tm of todayMatches) {
+        const old = prev.find((p) => p.id === tm.id)
+        if (hasMatchChanged(old, tm)) {
+          changed = true
+          break
+        }
+      }
+
       const merged = mergeTodayMatches(prev, todayMatches)
-      updateFromMatches(merged)
+      if (changed) {
+        updateFromMatches(merged)
+      }
       return merged
     })
     setLastUpdated(Date.now())
   }, [])
 
+  function startPolling() {
+    stopPolling()
+    liveIdRef.current = setInterval(livePoll, LIVE_POLL)
+    fullIdRef.current = setInterval(() => fullFetch(true), FULL_POLL)
+  }
+
+  function stopPolling() {
+    if (liveIdRef.current) { clearInterval(liveIdRef.current); liveIdRef.current = null }
+    if (fullIdRef.current) { clearInterval(fullIdRef.current); fullIdRef.current = null }
+  }
+
+  function onVisibilityChange() {
+    if (document.hidden) {
+      stopPolling()
+    } else {
+      livePoll()
+      startPolling()
+    }
+  }
+
   useEffect(() => {
     mountedRef.current = true
     fullFetch()
-
-    const liveId = setInterval(livePoll, LIVE_POLL)
-    const fullId = setInterval(() => fullFetch(true), FULL_POLL)
+    startPolling()
+    document.addEventListener('visibilitychange', onVisibilityChange)
 
     return () => {
       mountedRef.current = false
-      clearInterval(liveId)
-      clearInterval(fullId)
+      stopPolling()
+      document.removeEventListener('visibilitychange', onVisibilityChange)
     }
-  }, [fullFetch, livePoll])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   return {
     matches,

@@ -1,12 +1,18 @@
+import { memo } from 'react'
 import type { Group, GroupStanding, Match, Team } from '../types'
 import TEAMS from '../data/teams'
 import { flagUrl } from '../utils/flag'
+import { formatDateVi } from '../utils/format'
 import GoalTooltip from './GoalTooltip'
+
+type FormResult = 'W' | 'D' | 'L'
 
 interface GroupStageProps {
   groups: Group[]
   standings: Record<string, GroupStanding[]>
-  matches: Match[]
+  groupMatches: Record<string, Match[]>
+  teamForms: Record<string, FormResult[]>
+  groupProgress: Record<string, number>
   onTeamClick: (team: Team, stats: GroupStanding, matches: Match[]) => void
 }
 
@@ -19,25 +25,21 @@ function getQualStatus(
   belowStanding: GroupStanding | null,
   _totalMatches: number,
 ): QualStatus {
-  // If all 6 matches done, top 2 qualified
   if (idx < 2) {
-    // Check if position is mathematically secure
     if (belowIdx !== null && belowStanding) {
       const belowMax = belowStanding.points + (3 - belowStanding.played) * 3
       if (s.points > belowMax) return 'Q'
     }
     if (s.played === 3) return 'Q'
   }
-  // Check if eliminated
   if (idx >= 2) {
     if (belowIdx === null && s.played === 3) return 'E'
-    // Not in a 4-team group context; simplified
     if (s.played === 3 && idx === 3) return 'E'
   }
   return null
 }
 
-export default function GroupStage({ groups, standings, matches, onTeamClick }: GroupStageProps) {
+export default memo(function GroupStage({ groups, standings, groupMatches, teamForms, groupProgress, onTeamClick }: GroupStageProps) {
   return (
     <div>
       {/* Section header */}
@@ -52,9 +54,7 @@ export default function GroupStage({ groups, standings, matches, onTeamClick }: 
       {/* Group summary bar */}
       <div className="flex flex-wrap gap-2 mb-4">
         {groups.map((g) => {
-          const done = matches.filter(
-            (m) => m.stage === 'GROUP' && m.groupName === g.id && m.status === 'FINISHED',
-          ).length
+          const done = groupProgress[g.id] ?? 0
           const total = 6
           const pct = Math.round((done / total) * 100)
           return (
@@ -77,10 +77,8 @@ export default function GroupStage({ groups, standings, matches, onTeamClick }: 
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
         {groups.map((group, gi) => {
-          const groupStandings = standings[group.id] || defaultStandings(group)
-          const groupMatches = matches.filter(
-            (m) => m.stage === 'GROUP' && m.groupName === group.id,
-          )
+          const gs = standings[group.id] || defaultStandings(group)
+          const gm = groupMatches[group.id] || []
 
           return (
             <div
@@ -115,22 +113,22 @@ export default function GroupStage({ groups, standings, matches, onTeamClick }: 
                   </tr>
                 </thead>
                 <tbody>
-                  {groupStandings.map((s, idx) => {
+                  {gs.map((s, idx) => {
                     const team = findTeam(group, s.teamId)
                     const qualified = idx < 2
                     const gd = s.goalsFor - s.goalsAgainst
-                    const form = getForm(groupMatches, s.teamId)
-                    const below = idx < 3 ? groupStandings[idx + 1] : null
+                    const form = teamForms[s.teamId] || []
+                    const below = idx < 3 ? gs[idx + 1] : null
                     const qStatus: QualStatus = getQualStatus(idx, s, idx < 3 ? idx + 1 : null, below, 6)
                     return (
                       <tr
                         key={s.teamId}
-                        className={`border-b border-[#27272a]/20 last:border-0 transition-colors  ${
-                          qualified ? 'bg-gradient-to-r from-[#10b981]/5 to-transparent hover:from-[#10b981]/10' : 'hover:bg-white/[0.02]'
+                        className={`border-b border-[#27272a]/20 last:border-0 transition-colors ${
+                          qualified ? 'bg-[#10b981]/5 hover:bg-[#10b981]/10' : 'hover:bg-white/[0.02]'
                         }`}
                         onClick={() => {
                           if (team) {
-                            const teamMatches = matches.filter(
+                            const teamMatches = gm.filter(
                               (m) => m.homeTeamId === team.id || m.awayTeamId === team.id,
                             )
                             onTeamClick(team, s, teamMatches)
@@ -153,6 +151,7 @@ export default function GroupStage({ groups, standings, matches, onTeamClick }: 
                               src={team?.iso2 ? flagUrl(team.iso2) : ''}
                               alt=""
                               className="w-5 h-3.5 object-cover rounded-sm flex-shrink-0 ring-1 ring-white/10"
+                              loading="lazy"
                             />
                             <div className="flex flex-col min-w-0">
                               <span className={`font-medium truncate max-w-[70px] ${
@@ -214,10 +213,10 @@ export default function GroupStage({ groups, standings, matches, onTeamClick }: 
                 <div className="flex items-center gap-1.5 text-[10px] font-semibold text-[#3f3f46] mt-2 mb-2 uppercase tracking-widest">
                   <span>⚽</span> Trận đấu
                 </div>
-                {groupMatches.length === 0 ? (
+                {gm.length === 0 ? (
                   <p className="text-[10px] text-[#27272a] py-2 italic text-center">— Chưa có trận nào —</p>
                 ) : (
-                  groupMatches.map((m) => {
+                  gm.map((m) => {
                     const hd = td(group, m.homeTeamId)
                     const ad = td(group, m.awayTeamId)
                     const hasScore = m.status === 'FINISHED' || m.status === 'LIVE'
@@ -238,7 +237,7 @@ export default function GroupStage({ groups, standings, matches, onTeamClick }: 
                             {hd.n}
                           </span>
                           {hd.iso && (
-                            <img src={flagUrl(hd.iso)} alt="" className="w-4 h-3 object-cover rounded-sm flex-shrink-0 opacity-50 group-hover/dm:opacity-100 transition-opacity" />
+                            <img src={flagUrl(hd.iso)} alt="" className="w-4 h-3 object-cover rounded-sm flex-shrink-0 opacity-50 group-hover/dm:opacity-100 transition-opacity" loading="lazy" />
                           )}
                           {homeWon && <span className="text-[8px]">⚽</span>}
                         </div>
@@ -255,7 +254,7 @@ export default function GroupStage({ groups, standings, matches, onTeamClick }: 
                             </GoalTooltip>
                           ) : (
                             <span className="text-[10px] text-[#3f3f46]">
-                              {m.date ? new Date(m.date).toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit' }) : '—'}
+                              {m.date ? formatDateVi(m.date) : '—'}
                             </span>
                           )}
                         </div>
@@ -264,7 +263,7 @@ export default function GroupStage({ groups, standings, matches, onTeamClick }: 
                         <div className="flex items-center gap-1.5 flex-1 min-w-0">
                           {awayWon && <span className="text-[8px]">⚽</span>}
                           {ad.iso && (
-                            <img src={flagUrl(ad.iso)} alt="" className="w-4 h-3 object-cover rounded-sm flex-shrink-0 opacity-50 group-hover/dm:opacity-100 transition-opacity" />
+                            <img src={flagUrl(ad.iso)} alt="" className="w-4 h-3 object-cover rounded-sm flex-shrink-0 opacity-50 group-hover/dm:opacity-100 transition-opacity" loading="lazy" />
                           )}
                           <span className={`truncate max-w-[60px] group-hover/dm:text-white transition-colors ${
                             awayWon ? 'text-[#10b981] font-semibold' : homeWon ? 'text-[#71717a]' : 'text-[#a1a1aa]'
@@ -307,7 +306,7 @@ export default function GroupStage({ groups, standings, matches, onTeamClick }: 
       </div>
     </div>
   )
-}
+})
 
 function defaultStandings(group: Group): GroupStanding[] {
   return group.teams.map((t) => ({
@@ -323,20 +322,4 @@ function findTeam(group: Group, teamId: string): Group['teams'][number] | undefi
 function td(group: Group, teamId: string) {
   const t = findTeam(group, teamId)
   return { iso: t?.iso2 || null, n: t?.nameVi || t?.name || teamId }
-}
-
-type FormResult = 'W' | 'D' | 'L'
-
-function getForm(matches: Match[], teamId: string): FormResult[] {
-  return matches
-    .filter((m) => (m.status === 'FINISHED' || m.status === 'LIVE') && (m.homeTeamId === teamId || m.awayTeamId === teamId))
-    .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
-    .slice(0, 5)
-    .reverse()
-    .map((m) => {
-      if (m.homeScore === null || m.awayScore === null) return 'L'
-      const isHome = m.homeTeamId === teamId
-      const gd = isHome ? m.homeScore - m.awayScore : m.awayScore - m.homeScore
-      return gd > 0 ? 'W' : gd < 0 ? 'L' : 'D'
-    })
 }

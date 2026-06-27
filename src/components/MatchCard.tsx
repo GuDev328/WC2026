@@ -2,6 +2,7 @@ import { memo, useMemo } from 'react'
 import type { Match } from '../types'
 import TEAMS from '../data/teams'
 import { flagUrl } from '../utils/flag'
+import { formatDateTimeVi } from '../utils/format'
 import GoalTooltip from './GoalTooltip'
 
 interface MatchCardProps { match: Match }
@@ -49,10 +50,7 @@ export default memo(function MatchCard({ match }: MatchCardProps) {
   const homeIso = useMemo(() => ti(match.homeTeamId), [match.homeTeamId])
   const awayIso = useMemo(() => ti(match.awayTeamId), [match.awayTeamId])
   const dateStr = useMemo(() => {
-    if (match.status === 'SCHEDULED' && match.date) {
-      return new Date(match.date).toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit' })
-        + '\n' + new Date(match.date).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })
-    }
+    if (match.status === 'SCHEDULED' && match.date) return formatDateTimeVi(match.date)
     return null
   }, [match.status, match.date])
 

@@ -8,14 +8,6 @@ const DAY_LABELS: Record<string, string> = {
   '0': 'CN', '1': 'T2', '2': 'T3', '3': 'T4', '4': 'T5', '5': 'T6', '6': 'T7',
 }
 
-function fmtDate(d: string) {
-  const date = new Date(d)
-  const day = date.getDay()
-  const dom = date.getDate()
-  const month = date.getMonth() + 1
-  return `${DAY_LABELS[String(day)]} ${String(dom).padStart(2, '0')}/${String(month).padStart(2, '0')}`
-}
-
 export default function MatchesList({ matches }: MatchesListProps) {
   const [filter, setFilter] = useState<'LIVE' | 'FINISHED' | 'SCHEDULED'>('FINISHED')
   const [selectedDay, setSelectedDay] = useState<string | null>(null)
@@ -24,9 +16,9 @@ export default function MatchesList({ matches }: MatchesListProps) {
     const subset = matches.filter((m) => m.status === filter)
     return [...subset].sort((a, b) => {
       if (filter === 'SCHEDULED') {
-        return new Date(a.date).getTime() - new Date(b.date).getTime()
+        return a.date.localeCompare(b.date)
       }
-      return new Date(b.date).getTime() - new Date(a.date).getTime()
+      return b.date.localeCompare(a.date)
     })
   }, [matches, filter])
 
@@ -47,11 +39,25 @@ export default function MatchesList({ matches }: MatchesListProps) {
     ? filtered.filter((m) => m.date?.startsWith(selectedDay))
     : filtered
 
-  const counts: Record<string, number> = {
-    LIVE: matches.filter((m) => m.status === 'LIVE').length,
-    FINISHED: matches.filter((m) => m.status === 'FINISHED').length,
-    SCHEDULED: matches.filter((m) => m.status === 'SCHEDULED').length,
-  }
+  // Single-pass counts
+  const counts = useMemo(() => {
+    let live = 0, finished = 0, scheduled = 0
+    for (const m of matches) {
+      if (m.status === 'LIVE') live++
+      else if (m.status === 'FINISHED') finished++
+      else if (m.status === 'SCHEDULED') scheduled++
+    }
+    return { LIVE: live, FINISHED: finished, SCHEDULED: scheduled }
+  }, [matches])
+
+  // Memoized formatted date labels for day carousel
+  const dayLabels = useMemo(() => {
+    const labels: Record<string, string> = {}
+    for (const [day] of dayGroups) {
+      labels[day] = dayLabel(day)
+    }
+    return labels
+  }, [dayGroups])
 
   const tabs: { key: typeof filter; label: string; icon: string; color: string }[] = [
     { key: 'FINISHED', label: 'Đã đấu', icon: '✓', color: '#a1a1aa' },
@@ -141,7 +147,7 @@ export default function MatchesList({ matches }: MatchesListProps) {
                 : 'text-[#3f3f46] border-transparent hover:text-[#a1a1aa]'
             }`}
           >
-            {fmtDate(day)}
+            {dayLabels[day] ?? day}
             <span className="ml-1 text-[#27272a]">{dayMatches.length}</span>
           </button>
         ))}
@@ -166,4 +172,12 @@ export default function MatchesList({ matches }: MatchesListProps) {
       )}
     </div>
   )
+}
+
+function dayLabel(day: string): string {
+  const date = new Date(day + 'T00:00:00')
+  const dow = date.getDay()
+  const dom = date.getDate()
+  const month = date.getMonth() + 1
+  return `${DAY_LABELS[String(dow)]} ${String(dom).padStart(2, '0')}/${String(month).padStart(2, '0')}`
 }

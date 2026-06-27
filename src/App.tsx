@@ -12,6 +12,8 @@ import TEAMS from './data/teams'
 import { flagUrl } from './utils/flag'
 import type { Team, GroupStanding, Match } from './types'
 
+type FormResult = 'W' | 'D' | 'L'
+
 export default function App() {
   const { matches, groups, standings, loading, error, lastUpdated, refresh } = useLiveScores()
   const { activeTab, setActiveTab } = useTabs('groups')
@@ -23,34 +25,87 @@ export default function App() {
     matches: Match[]
   } | null>(null)
 
-  const liveCount = matches.filter((m) => m.status === 'LIVE').length
-  const finishedCount = matches.filter((m) => m.status === 'FINISHED').length
+  // Pre-compute group data: grouped matches, team forms, group progress (single pass)
+  const groupData = useMemo(() => {
+    const groupedMatches: Record<string, Match[]> = {}
+    const teamFormMatches: Record<string, Match[]> = {}
+    const groupProgress: Record<string, number> = {}
 
-  const stats = useMemo(() => {
-    const finished = matches.filter((m) => m.status === 'FINISHED')
-    const totalGoals = finished.reduce((s, m) => s + (m.homeScore ?? 0) + (m.awayScore ?? 0), 0)
-    // Biggest win
-    let biggestWin = { diff: 0, text: '' }
-    for (const m of finished) {
-      if (m.homeScore === null || m.awayScore === null) continue
-      const diff = Math.abs(m.homeScore - m.awayScore)
-      if (diff > biggestWin.diff) {
-        biggestWin = { diff, text: `${TEAMS[m.homeScore > m.awayScore ? m.homeTeamId : m.awayTeamId]?.nameVi || '?'} ${m.homeScore}-${m.awayScore}` }
+    for (const m of matches) {
+      if (m.stage === 'GROUP' && m.groupName) {
+        if (!groupedMatches[m.groupName]) groupedMatches[m.groupName] = []
+        groupedMatches[m.groupName].push(m)
+        if (m.status === 'FINISHED') {
+          groupProgress[m.groupName] = (groupProgress[m.groupName] || 0) + 1
+        }
+      }
+      if (m.status === 'FINISHED' || m.status === 'LIVE') {
+        for (const tid of [m.homeTeamId, m.awayTeamId]) {
+          if (!teamFormMatches[tid]) teamFormMatches[tid] = []
+          teamFormMatches[tid].push(m)
+        }
       }
     }
+
+    // Process team forms: sort by date desc, slice 5, reverse, map to W/D/L
+    const teamForms: Record<string, FormResult[]> = {}
+    for (const [tid, tms] of Object.entries(teamFormMatches)) {
+      const sorted = tms
+        .sort((a, b) => b.date.localeCompare(a.date))
+        .slice(0, 5)
+        .reverse()
+      teamForms[tid] = sorted.map((m) => {
+        if (m.homeScore === null || m.awayScore === null) return 'L'
+        const isHome = m.homeTeamId === tid
+        const gd = isHome ? m.homeScore - m.awayScore : m.awayScore - m.homeScore
+        return gd > 0 ? 'W' : gd < 0 ? 'L' : 'D'
+      })
+    }
+
+    return { groupedMatches, teamForms, groupProgress }
+  }, [matches])
+
+  // Consolidated stats + counts (single pass)
+  const matchSummary = useMemo(() => {
+    let liveCount = 0
+    let finishedCount = 0
+    const liveMatches: Match[] = []
+    let totalGoals = 0
+    let biggestWin = { diff: 0, text: '' }
+
+    for (const m of matches) {
+      if (m.status === 'LIVE') {
+        liveCount++
+        liveMatches.push(m)
+      } else if (m.status === 'FINISHED') {
+        finishedCount++
+        totalGoals += (m.homeScore ?? 0) + (m.awayScore ?? 0)
+        if (m.homeScore !== null && m.awayScore !== null) {
+          const diff = Math.abs(m.homeScore - m.awayScore)
+          if (diff > biggestWin.diff) {
+            biggestWin = {
+              diff,
+              text: `${TEAMS[m.homeScore > m.awayScore ? m.homeTeamId : m.awayTeamId]?.nameVi || '?'} ${m.homeScore}-${m.awayScore}`,
+            }
+          }
+        }
+      }
+    }
+
     return {
+      liveCount,
+      finishedCount,
+      liveMatches,
       totalMatches: matches.length,
-      finished: finishedCount,
-      live: liveCount,
       totalGoals,
-      avgGoals: finished.length > 0 ? (totalGoals / finished.length).toFixed(1) : '—',
+      avgGoals: finishedCount > 0 ? (totalGoals / finishedCount).toFixed(1) : '—',
       biggestWin,
     }
-  }, [matches, liveCount, finishedCount])
+  }, [matches])
 
   // Live browser tab title
   useEffect(() => {
-    const live = matches.filter((m) => m.status === 'LIVE')
+    const live = matchSummary.liveMatches
     if (live.length > 0) {
       const scores = live.slice(0, 2).map((m) => {
         const h = TEAMS[m.homeTeamId]?.nameVi || m.homeTeamId
@@ -61,7 +116,7 @@ export default function App() {
     } else {
       document.title = 'WC 2026 · World Cup'
     }
-  }, [matches])
+  }, [matchSummary.liveMatches])
 
   // Keyboard shortcuts
   useEffect(() => {
@@ -76,6 +131,8 @@ export default function App() {
     window.addEventListener('keydown', handleKey)
     return () => window.removeEventListener('keydown', handleKey)
   }, [setActiveTab, selectedTeam])
+
+  const { liveCount, finishedCount, totalMatches, totalGoals, avgGoals, biggestWin } = matchSummary
 
   return (
     <div className="min-h-screen bg-[#09090b] flex flex-col relative">
@@ -93,23 +150,23 @@ export default function App() {
         <div className="flex items-center justify-between py-2 gap-4">
           <div className="flex items-center gap-4 text-[10px]">
             <span className="text-[#3f3f46]">
-              <span className="text-white font-semibold tabular-nums">{stats.totalMatches}</span> trận
+              <span className="text-white font-semibold tabular-nums">{totalMatches}</span> trận
             </span>
             <span className="text-[#27272a]">|</span>
             <span className="text-[#3f3f46]">
-              <span className="text-[#10b981] font-semibold tabular-nums">{stats.finished}</span> đã đá
+              <span className="text-[#10b981] font-semibold tabular-nums">{finishedCount}</span> đã đá
             </span>
             <span className="text-[#27272a]">|</span>
             <span className="text-[#3f3f46]">
-              <span className="text-[#f43f5e] font-semibold tabular-nums">{stats.totalGoals}</span> bàn
+              <span className="text-[#f43f5e] font-semibold tabular-nums">{totalGoals}</span> bàn
             </span>
             <span className="text-[#27272a]">|</span>
-            <span className="text-[#3f3f46]">±{stats.avgGoals} bàn/trận</span>
-            {stats.biggestWin.diff >= 3 && (
+            <span className="text-[#3f3f46]">±{avgGoals} bàn/trận</span>
+            {biggestWin.diff >= 3 && (
               <>
                 <span className="text-[#27272a]">|</span>
                 <span className="text-[#3f3f46]">
-                  <span className="text-[#f59e0b]">⚡</span> {stats.biggestWin.text}
+                  <span className="text-[#f59e0b]">⚡</span> {biggestWin.text}
                 </span>
               </>
             )}
@@ -200,7 +257,9 @@ export default function App() {
               <GroupStage
                 groups={groups}
                 standings={standings}
-                matches={matches}
+                groupMatches={groupData.groupedMatches}
+                teamForms={groupData.teamForms}
+                groupProgress={groupData.groupProgress}
                 onTeamClick={(team, stats, teamMatches) => setSelectedTeam({ team, stats, matches: teamMatches })}
               />
             )}

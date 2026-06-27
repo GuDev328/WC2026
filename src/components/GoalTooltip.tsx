@@ -66,9 +66,9 @@ export default memo(function GoalTooltip({ matchId, children }: GoalTooltipProps
 
   return (
     <div ref={triggerRef} className="inline-flex items-center group/tip" onMouseEnter={show} onMouseLeave={() => tryHide('trigger')}>
-      <div className="absolute -inset-1 rounded-md opacity-0 group-hover/tip:opacity-100 transition-opacity bg-white/[0.03] ring-1 ring-white/5" />
+      <div className={`absolute -inset-1 rounded-md transition-opacity bg-white/[0.03] ring-1 ring-white/5 ${open ? 'opacity-100' : 'opacity-0'}`} />
       <span className="relative z-10 ">{children}</span>
-      <span className="relative z-10 w-2.5 h-2.5 flex items-center justify-center ml-0.5 opacity-0 group-hover/tip:opacity-100 transition-opacity flex-shrink-0">
+      <span className={`relative z-10 w-2.5 h-2.5 flex items-center justify-center ml-0.5 transition-opacity flex-shrink-0 ${open ? 'opacity-100' : 'opacity-0'}`}>
         <svg width="7" height="4" viewBox="0 0 7 4" fill="none"><path d="M1 0.5L3.5 3L6 0.5" stroke="#52525b" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round"/></svg>
       </span>
 
