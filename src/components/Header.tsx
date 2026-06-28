@@ -5,9 +5,10 @@ interface HeaderProps {
   error: string | null
   onRefresh: () => void
   liveCount: number
+  loading: boolean
 }
 
-export default function Header({ lastUpdated, error, onRefresh, liveCount }: HeaderProps) {
+export default function Header({ lastUpdated, error, onRefresh, liveCount, loading }: HeaderProps) {
   const [timeAgo, setTimeAgo] = useState('')
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
@@ -91,9 +92,15 @@ export default function Header({ lastUpdated, error, onRefresh, liveCount }: Hea
           <button
             type="button"
             onClick={onRefresh}
-            className="text-[11px] font-medium bg-white/5 hover:bg-white/10 text-[#a1a1aa] border border-[#27272a] hover:border-[#3f3f46] px-3 py-2.5 sm:py-1.5 rounded-lg transition-all active:scale-95 ripple touch-target flex items-center justify-center"
+            disabled={loading}
+            className="text-[11px] font-medium bg-white/5 hover:bg-white/10 text-[#a1a1aa] border border-[#27272a] hover:border-[#3f3f46] px-3 py-2.5 sm:py-1.5 rounded-lg transition-all active:scale-95 ripple touch-target flex items-center justify-center gap-1.5 disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            ↻ Làm mới
+            {loading ? (
+              <span className="inline-block w-3 h-3 border border-[#a1a1aa] border-t-transparent rounded-full animate-spin" />
+            ) : (
+              '↻'
+            )}
+            Làm mới
           </button>
         </div>
       </div>

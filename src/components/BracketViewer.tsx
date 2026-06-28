@@ -133,7 +133,7 @@ export default function BracketViewer({ matches }: BracketViewerProps) {
         <span className="text-[10px] text-[#3f3f46] ml-2">32 đội · Knockout</span>
       </div>
 
-      <div className="overflow-auto rounded-xl border border-[#27272a] momentum-scroll" style={{ maxHeight: '82vh', background: '#09090b' }}>
+      <div className="overflow-auto rounded-xl border border-[#27272a] momentum-scroll" style={{  background: '#09090b' }}>
           <svg viewBox={`0 0 ${w} ${h}`} className="block mx-auto" style={{ minWidth: `${w}px`, height: `${h}px` }}>
           <defs>
             <radialGradient id="bgGlow" cx="50%" cy="45%">

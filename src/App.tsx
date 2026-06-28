@@ -143,7 +143,7 @@ export default function App() {
       <div className="bg-grid" />
       <div className="bg-particles" />
 
-      <Header lastUpdated={lastUpdated} error={error} onRefresh={refresh} liveCount={liveCount} />
+      <Header lastUpdated={lastUpdated} error={error} onRefresh={refresh} liveCount={liveCount} loading={loading} />
 
       {/* Stats bar + countdown */}
       <div className="relative z-10 max-w-[1600px] mx-auto w-full px-6">
